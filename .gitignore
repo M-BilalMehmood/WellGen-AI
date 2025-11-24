@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+*.egg-info/
+*.pyc
+
+# Models (large files - don't commit trained models)
+model/
+models/
+*.bin
+*.safetensors
+checkpoint-*/
+*.pth
+*.ckpt
+
+# Training outputs
+*.log
+training_logs/
+wandb/
+
+# Data (don't commit large datasets)
+data/
+data/*.csv
+data/*.json
+data/images/
+*.parquet
+*.arrow
+
+# Generated images
+generated_images/
+outputs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Environment
+.env
+.env.local
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Cache
+.cache/
+*.cache

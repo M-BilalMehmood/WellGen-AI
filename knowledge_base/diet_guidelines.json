@@ -1,0 +1,122 @@
+[
+  {
+    "id": "diet_001",
+    "category": "weight_loss",
+    "title": "Caloric Deficit for Weight Loss",
+    "content": "To lose weight safely, create a caloric deficit of 500-750 calories per day. This leads to approximately 0.5-1 kg weight loss per week. Daily calorie needs vary: sedentary men need 2000-2500 cal, sedentary women need 1600-2000 cal. Active individuals need more. Never go below 1200 cal/day for women or 1500 cal/day for men without medical supervision."
+  },
+  {
+    "id": "diet_002",
+    "category": "weight_loss",
+    "title": "Macronutrient Distribution for Fat Loss",
+    "content": "Optimal macros for weight loss: 40% carbs, 30% protein, 30% fats. Protein (1.6-2.2g per kg body weight) preserves muscle mass. Complex carbs (whole grains, vegetables) provide sustained energy. Healthy fats (avocado, nuts, olive oil) support hormone production and satiety."
+  },
+  {
+    "id": "diet_003",
+    "category": "muscle_gain",
+    "title": "Caloric Surplus for Muscle Building",
+    "content": "For muscle gain, maintain 300-500 calorie surplus above maintenance. Protein is critical: 1.6-2.2g per kg body weight daily. Distribute protein across 4-6 meals for optimal synthesis. Include carbs around workouts for energy and recovery. Target 45% carbs, 30% protein, 25% fats."
+  },
+  {
+    "id": "diet_004",
+    "category": "muscle_gain",
+    "title": "Best Protein Sources",
+    "content": "High-quality protein sources: chicken breast (31g protein/100g), lean beef (26g/100g), fish (20-25g/100g), eggs (6g per egg), Greek yogurt (10g/100g), lentils (9g/100g), tofu (8g/100g), whey protein (25g per scoop). Combine animal and plant proteins for complete amino acid profile."
+  },
+  {
+    "id": "diet_005",
+    "category": "diabetes",
+    "title": "Blood Sugar Management",
+    "content": "For diabetes management: focus on low glycemic index foods (GI < 55). Include: non-starchy vegetables, whole grains, legumes, lean proteins. Avoid: white bread, sugary drinks, processed foods. Eat regular meals every 3-4 hours. Pair carbs with protein/fat to slow glucose absorption. Monitor portions: 45-60g carbs per meal."
+  },
+  {
+    "id": "diet_006",
+    "category": "diabetes",
+    "title": "Diabetes-Friendly Meals",
+    "content": "Sample diabetes meals: Breakfast - steel-cut oats with berries and almonds. Lunch - grilled chicken salad with quinoa. Dinner - baked salmon with roasted vegetables and brown rice. Snacks - Greek yogurt, apple with peanut butter, carrots with hummus. Drink water, avoid fruit juices."
+  },
+  {
+    "id": "diet_007",
+    "category": "general",
+    "title": "Hydration Guidelines",
+    "content": "Water intake: men need 3.7L/day, women need 2.7L/day (including food sources). During exercise, add 400-800ml per hour. Signs of dehydration: dark urine, fatigue, dizziness. Benefits: aids digestion, regulates body temperature, improves skin health, supports metabolism."
+  },
+  {
+    "id": "diet_008",
+    "category": "general",
+    "title": "Meal Timing and Frequency",
+    "content": "Eat 4-6 small meals daily or 3 main meals with 2 snacks. Breakfast within 1 hour of waking jumpstarts metabolism. Last meal 2-3 hours before bed. Pre-workout: carbs 1-2 hours before. Post-workout: protein + carbs within 30-60 minutes for recovery."
+  },
+  {
+    "id": "diet_009",
+    "category": "general",
+    "title": "Healthy Fats vs Unhealthy Fats",
+    "content": "Healthy fats (unsaturated): olive oil, avocados, nuts, seeds, fatty fish (salmon, mackerel). Benefits: heart health, brain function, hormone production. Limit saturated fats: red meat, butter, cheese. Avoid trans fats: fried foods, processed baked goods. Target 20-35% of calories from healthy fats."
+  },
+  {
+    "id": "diet_010",
+    "category": "general",
+    "title": "Fiber Importance",
+    "content": "Daily fiber needs: 25g for women, 38g for men. Benefits: improves digestion, lowers cholesterol, regulates blood sugar, promotes satiety. Sources: vegetables (broccoli, Brussels sprouts), fruits (berries, apples), whole grains (oats, brown rice), legumes (beans, lentils), nuts and seeds."
+  },
+  {
+    "id": "diet_011",
+    "category": "meal_ideas",
+    "title": "High-Protein Breakfast Ideas",
+    "content": "Breakfast options (20-30g protein): Greek yogurt parfait with granola and berries (350 cal). Scrambled eggs with spinach and whole wheat toast (400 cal). Protein smoothie with banana, oats, and peanut butter (450 cal). Cottage cheese with fruit and almonds (300 cal). Oatmeal with protein powder and nuts (420 cal)."
+  },
+  {
+    "id": "diet_012",
+    "category": "meal_ideas",
+    "title": "Balanced Lunch Options",
+    "content": "Lunch ideas (400-600 cal): Grilled chicken quinoa bowl with roasted vegetables (520 cal). Turkey and avocado wrap with side salad (480 cal). Salmon with brown rice and steamed broccoli (550 cal). Vegetarian burrito bowl with black beans and veggies (450 cal). Tuna salad with whole grain crackers (420 cal)."
+  },
+  {
+    "id": "diet_013",
+    "category": "meal_ideas",
+    "title": "Nutritious Dinner Recipes",
+    "content": "Dinner options (500-700 cal): Baked chicken breast with sweet potato and green beans (580 cal). Lean beef stir-fry with mixed vegetables and brown rice (620 cal). Grilled fish with quinoa and asparagus (540 cal). Turkey meatballs with zucchini noodles and marinara (500 cal). Tofu curry with chickpeas and cauliflower rice (480 cal)."
+  },
+  {
+    "id": "diet_014",
+    "category": "meal_ideas",
+    "title": "Healthy Snack Options",
+    "content": "Snacks (100-200 cal): Apple slices with 1 tbsp peanut butter (150 cal). Greek yogurt with berries (120 cal). Carrot sticks with 2 tbsp hummus (100 cal). Hard-boiled egg (78 cal). Protein bar (150-200 cal). Rice cakes with almond butter (140 cal). Mixed nuts (160 cal for 30g)."
+  },
+  {
+    "id": "diet_015",
+    "category": "meal_prep",
+    "title": "Meal Prep Strategies",
+    "content": "Meal prep tips: Cook proteins in bulk (grill 2kg chicken, bake fish). Pre-portion grains (cook quinoa, brown rice). Chop vegetables for week. Prepare overnight oats. Make protein smoothie packs. Store in glass containers (3-4 day portions). Label with date and calories. Freeze extras for emergencies."
+  },
+  {
+    "id": "diet_016",
+    "category": "supplements",
+    "title": "Essential Supplements",
+    "content": "Recommended supplements: Multivitamin (daily insurance). Omega-3 (1000mg EPA+DHA for heart/brain). Vitamin D (2000-4000 IU if deficient). Protein powder (convenience for protein targets). Creatine (5g daily for muscle/strength). Probiotics (gut health). Magnesium (300-400mg for sleep/recovery). Consult doctor before starting."
+  },
+  {
+    "id": "diet_017",
+    "category": "allergies",
+    "title": "Nut Allergy Alternatives",
+    "content": "For nut allergies, replace with: Sunflower seed butter instead of peanut/almond butter. Pumpkin seeds instead of almonds. Tahini (sesame paste) for spreads. Oat flour instead of almond flour. Soy nuts as crunchy snack. Coconut (if tolerated) for healthy fats. Always read labels for cross-contamination warnings."
+  },
+  {
+    "id": "diet_018",
+    "category": "allergies",
+    "title": "Dairy-Free Alternatives",
+    "content": "Lactose-free options: Almond milk, oat milk, soy milk (fortified with calcium). Coconut yogurt, cashew yogurt. Nutritional yeast for cheesy flavor. Coconut cream instead of heavy cream. Dairy-free protein powders (pea, rice, hemp). Check labels for calcium and vitamin D fortification."
+  },
+  {
+    "id": "diet_019",
+    "category": "allergies",
+    "title": "Gluten-Free Diet Guidelines",
+    "content": "Gluten-free grains: rice, quinoa, buckwheat, millet, corn, amaranth. Avoid: wheat, barley, rye, standard oats. Safe carbs: potatoes, sweet potatoes, beans, lentils. Check labels for hidden gluten in sauces, seasonings, processed foods. Gluten-free doesn't mean healthier - many GF products are high in sugar/refined flour."
+  },
+  {
+    "id": "diet_020",
+    "category": "exercise",
+    "title": "Exercise Recommendations for Weight Loss",
+    "content": "For weight loss: 150-300 minutes moderate cardio weekly (brisk walking, cycling, swimming). Add strength training 2-3x per week to preserve muscle. HIIT 2-3x weekly burns maximum calories in short time. Daily steps: aim for 10,000. Consistency matters more than intensity. Combine with calorie deficit for best results."
+  }
+]

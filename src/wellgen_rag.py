@@ -87,6 +87,7 @@ USER PROFILE:
 - Height: {user_data['height']}cm, Weight: {user_data['weight']}kg
 - Goal: {user_data['goal'].replace('_', ' ')}
 - Allergies: {user_data['allergies']}
+- Cuisine: {user_data.get('cuisine', 'any')}
 - Target calories: {target_calories} cal/day
 
 DIET PLAN TO VALIDATE:
@@ -100,6 +101,8 @@ VALIDATION CHECKLIST:
 5. Is the plan nutritionally balanced (protein, carbs, fats, fiber)?
 6. Are there any extreme, unsafe, or scientifically unsound recommendations?
 7. Are portion sizes realistic and clearly specified?
+8. Is there sufficient VARIETY? (No repetitive meals across days)
+9. Does it respect the cuisine preference ({user_data.get('cuisine', 'any')})?
 
 Respond in this exact format:
 VALIDATION RESULT: [PASS/WARNING/FAIL]
@@ -150,6 +153,7 @@ OVERALL ASSESSMENT: [1-2 sentence summary]"""
         gender = user_data.get('gender', 'male')
         goal = user_data.get('goal', 'weight_loss')
         allergies = user_data.get('allergies', 'none')
+        cuisine = user_data.get('cuisine', 'any')
         
         self.user_profile = user_data
         
@@ -159,7 +163,8 @@ OVERALL ASSESSMENT: [1-2 sentence summary]"""
         # Create base query for RAG retrieval
         goal_text = goal.replace('_', ' ')
         allergy_text = f" avoiding {allergies}" if allergies != 'none' else ""
-        rag_query = f"personalized diet plan for {goal_text}{allergy_text}"
+        cuisine_text = f" {cuisine} cuisine" if cuisine != 'any' else ""
+        rag_query = f"personalized diet plan for {goal_text}{allergy_text}{cuisine_text}"
         
         # Get relevant nutrition knowledge via RAG
         augmented_prompt, retrieved_docs = self.rag.augment_prompt(rag_query, user_data)
@@ -176,11 +181,17 @@ REQUIREMENTS:
    - Lunch (with calories)
    - Dinner (with calories)
    - 2 Snacks (with calories)
-3. Meals should be VARIED - use different foods each day
-4. Consider the user's allergies: {allergies}
-5. Include specific portion sizes
-6. Total daily calories should match target: {calories} cal
-7. Use the nutrition knowledge provided above to ensure scientifically sound recommendations
+3. **CRITICAL: MEAL VARIETY IS MANDATORY**
+   - Do NOT repeat the same breakfast every day.
+   - Do NOT repeat the same lunch or dinner.
+   - Provide diverse options (e.g., different proteins, grains, vegetables).
+4. **CUISINE PREFERENCE**: {cuisine}
+   - Incorporate {cuisine} flavors and dishes where appropriate.
+   - If 'any', provide a mix of cuisines.
+5. Consider the user's allergies: {allergies}
+6. Include specific portion sizes
+7. Total daily calories should match target: {calories} cal
+8. Use the nutrition knowledge provided above to ensure scientifically sound recommendations
 
 FORMAT:
 Day: [Day Name]

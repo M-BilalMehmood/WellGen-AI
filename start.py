@@ -47,6 +47,7 @@ try:
     goal = goal_map.get(goal_input, 'weight_loss')
     
     allergies = input("Any food allergies? (or 'none'): ")
+    cuisine = input("Preferred cuisine? (e.g., Italian, Asian, Mediterranean, or 'any'): ") or "any"
     
     # Calculate BMI
     bmi, bmi_category = wellgen.calculate_bmi(height, weight)
@@ -60,7 +61,8 @@ try:
         'bmi': bmi,
         'bmi_category': bmi_category,
         'goal': goal,
-        'allergies': allergies.lower()
+        'allergies': allergies.lower(),
+        'cuisine': cuisine.lower()
     }
     
     # Set profile
@@ -76,6 +78,7 @@ try:
     print(f"- BMI: {bmi} ({bmi_category})")
     print(f"- Goal: {goal.replace('_', ' ').title()}")
     print(f"- Allergies: {allergies}")
+    print(f"- Cuisine: {cuisine.title()}")
     
     # Generate diet plan
     print("\n" + "="*70)
@@ -101,6 +104,61 @@ try:
         if user_input.lower() in ['quit', 'exit', 'bye']:
             print("\n👋 Thanks for using WellGen AI! Stay healthy!")
             break
+        
+        # Check if user wants a NEW diet plan
+        create_keywords = ['create', 'generate', 'new', 'make me', 'give me']
+        plan_keywords = ['diet plan', 'meal plan', 'food plan']
+        
+        wants_new_plan = any(create in user_input.lower() for create in create_keywords) and \
+                         any(plan in user_input.lower() for plan in plan_keywords)
+        
+        if wants_new_plan:
+            confirm = input("\nCreate a new diet plan? (yes/no): ").lower()
+            if confirm in ['yes', 'y']:
+                print("\n📋 Let me create a personalized diet plan for you!\n")
+                try:
+                    height = int(input("Height (cm): ") or str(int(user_data['height'])))
+                    weight = int(input("Weight (kg): ") or str(int(user_data['weight'])))
+                    age = int(input("Age: ") or str(user_data['age']))
+                    gender = input(f"Gender ({user_data['gender']}): ").lower() or user_data['gender']
+                    allergies = input(f"Allergies ({user_data['allergies']}): ") or user_data['allergies']
+                    cuisine = input(f"Cuisine ({user_data['cuisine']}): ") or user_data['cuisine']
+                    
+                    print("\nGoal options:")
+                    print("1. Weight Loss")
+                    print("2. Muscle Gain")
+                    print("3. Maintain Weight")
+                    print("4. General Health")
+                    goal_choice = input("Choose goal (1-4): ").strip()
+                    goal = goal_map.get(goal_choice, user_data['goal'])
+                    
+                    # Update user data
+                    user_data.update({
+                        'height': height,
+                        'weight': weight,
+                        'age': age,
+                        'gender': gender,
+                        'allergies': allergies,
+                        'cuisine': cuisine,
+                        'goal': goal
+                    })
+                    
+                    # Recalculate BMI
+                    bmi, bmi_category = wellgen.calculate_bmi(height, weight)
+                    user_data['bmi'] = bmi
+                    user_data['bmi_category'] = bmi_category
+                    wellgen.user_profile = user_data
+                    
+                    print("\n🤖 Generating your evidence-based diet plan...\n")
+                    plan = wellgen.generate_diet_plan(user_data)
+                    print("="*70)
+                    print(plan)
+                    print("="*70)
+                    continue
+                    
+                except ValueError:
+                    print("\n❌ Invalid input. Please enter valid numbers.")
+                    continue
         
         # Let the chat function handle all questions naturally with RAG context
         response = wellgen.chat(user_input)

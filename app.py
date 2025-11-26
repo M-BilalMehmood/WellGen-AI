@@ -40,6 +40,201 @@ st.set_page_config(
 @st.cache_resource
 def load_text_ai():
     return WellGenRAG(use_rag=True)
+
+text_ai = load_text_ai()
+
+# ---------------------------------------------------------
+# MODERN MINIMALIST CSS
+# ---------------------------------------------------------
+st.markdown("""
+<style>
+    /* Hide streamlit elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stDeployButton {visibility: hidden;}
+    
+    /* Main container */
+    .main {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        padding: 0 !important;
+    }
+    
+    /* Chat container */
+    .chat-container {
+        max-width: 900px;
+        margin: 0 auto;
+        height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
+        padding: 0 1rem;
+    }
+    
+    /* Messages area */
+    .messages-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2rem 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* Message bubble styling */
+    .message-wrapper {
+        display: flex;
+        margin-bottom: 1rem;
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    .message-wrapper.user {
+        justify-content: flex-end;
+    }
+    
+    .message-bubble {
+        max-width: 70%;
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        line-height: 1.5;
+        word-wrap: break-word;
+        font-size: 0.95rem;
+    }
+    
+    .message-bubble.assistant {
+        background: white;
+        color: #333;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    
+    .message-bubble.user {
+        background: #3b82f6;
+        color: white;
+        border-radius: 12px;
+    }
+    
+    /* Input area */
+    .input-container {
+        padding: 1.5rem 0;
+        border-top: 1px solid #e0e0e0;
+        background: white;
+        position: sticky;
+        bottom: 0;
+    }
+    
+    /* Header */
+    .header {
+        text-align: center;
+        padding: 2rem 1rem 1rem;
+        border-bottom: 1px solid #e0e0e0;
+        background: white;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .header h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        letter-spacing: -0.5px;
+    }
+    
+    .header p {
+        margin: 0.5rem 0 0 0;
+        color: #6b7280;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+    
+    /* Profile badge */
+    .profile-badge {
+        background: #f3f4f6;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: #4b5563;
+        margin-top: 1rem;
+        text-align: center;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .profile-badge strong {
+        color: #1f2937;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Images */
+    .image-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .image-item {
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e0e0e0;
+        background: white;
+    }
+    
+    /* Setup form styling */
+    .setup-form {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        max-width: 600px;
+        margin: 2rem auto;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    
+    .setup-form h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: #1f2937;
+    }
+    
+    .setup-form label {
+        color: #374151;
+        font-weight: 500;
+        margin-top: 1rem;
+        display: block;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# SESSION STATE INITIALIZATION
+# ---------------------------------------------------------
 if "step" not in st.session_state:
     st.session_state.step = 'setup'
 

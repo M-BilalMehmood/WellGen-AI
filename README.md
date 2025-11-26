@@ -66,7 +66,7 @@ GROQ_API_KEY=gsk_your_key_here
 
 ```bash
 # Run the quick launcher
-python start.py
+python src/start.py
 ```
 
 ## 💡 Usage Guide
@@ -102,15 +102,26 @@ The bot remembers the plan and your profile!
 
 ```
 wellgen-ai/
-├── start.py                    # Main entry point (Run this!)
-├── wellgen_rag.py              # Core RAG application logic
-├── rag_system.py               # Vector database & retrieval system
-├── convert_kaggle_to_rag.py    # Data processing script
-├── requirements.txt            # Project dependencies
+├── src/
+│   ├── start.py                # Main entry point (Run this!)
+│   ├── text_gen/               # Text generation module
+│   │   ├── wellgen_rag.py      # Core RAG application logic
+│   │   └── rag_system.py       # Vector database & retrieval system
+│   ├── image_gen/              # Image generation module
+│   │   ├── download_food_dataset.py
+│   │   ├── generate_images.py
+│   │   ├── setup_image_model.py
+│   │   └── train_image_model.py
+│   └── utils/                  # Data processing utilities
+│       ├── convert_kaggle_to_rag.py
+│       ├── count_data.py
+│       └── download_chatbot_data.py
 ├── knowledge_base/             # Processed nutrition knowledge
 │   └── kaggle_nutrition.json
 ├── data/                       # Raw Kaggle datasets
-└── model/                      # (Optional) Local model artifacts
+├── model/                      # Model artifacts
+├── requirements.txt            # Project dependencies
+└── .env                        # API keys (create this)
 ```
 
 ## 🔧 Technical Details

@@ -1,0 +1,836 @@
+#!/usr/bin/env python3
+"""
+WellGen AI — Modern Minimalist Chatbot UI
+Single file Streamlit app with ChatGPT-style interface
+- Profile setup integrated into chat flow
+- Clean, minimal chat interface
+- RAG text generation + LoRA image generation
+"""
+
+import streamlit as st
+from pathlib import Path
+import time
+from dotenv import load_dotenv
+import argparse
+from PIL import Image
+import uuid
+import re
+
+load_dotenv()
+
+import sys
+sys.path.append('/mnt/c/Users/bilal/OneDrive/Documents/University/Gen AI/Project/wellgen-ai')
+
+from src.text_gen.wellgen_rag import WellGenRAG
+from src.image_gen.inference import generate_images
+
+# ---------------------------------------------------------
+# PAGE CONFIG
+# ---------------------------------------------------------
+st.set_page_config(
+    page_title="WellGen AI",
+    page_icon="✨",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# ---------------------------------------------------------
+# LOAD AI
+# ---------------------------------------------------------
+@st.cache_resource
+def load_text_ai():
+    return WellGenRAG(use_rag=True)
+
+text_ai = load_text_ai()
+
+# ---------------------------------------------------------
+# MODERN MINIMALIST CSS
+# ---------------------------------------------------------
+st.markdown("""
+<style>
+    /* Hide streamlit elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stDeployButton {visibility: hidden;}
+    
+    /* Main container */
+    .main {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        padding: 0 !important;
+    }
+    
+    /* Chat container */
+    .chat-container {
+        max-width: 900px;
+        margin: 0 auto;
+        height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
+        padding: 0 1rem;
+    }
+    
+    /* Messages area */
+    .messages-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2rem 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* Message bubble styling */
+    .message-wrapper {
+        display: flex;
+        margin-bottom: 1rem;
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    .message-wrapper.user {
+        justify-content: flex-end;
+    }
+    
+    .message-bubble {
+        max-width: 70%;
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        line-height: 1.5;
+        word-wrap: break-word;
+        font-size: 0.95rem;
+    }
+    
+    .message-bubble.assistant {
+        background: white;
+        color: #333;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    
+    .message-bubble.user {
+        background: #3b82f6;
+        color: white;
+        border-radius: 12px;
+    }
+    
+    /* Input area */
+    .input-container {
+        padding: 1.5rem 0;
+        border-top: 1px solid #e0e0e0;
+        background: white;
+        position: sticky;
+        bottom: 0;
+    }
+    
+    /* Header */
+    .header {
+        text-align: center;
+        padding: 2rem 1rem 1rem;
+        border-bottom: 1px solid #e0e0e0;
+        background: white;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .header h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        letter-spacing: -0.5px;
+    }
+    
+    .header p {
+        margin: 0.5rem 0 0 0;
+        color: #6b7280;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+    
+    /* Profile badge */
+    .profile-badge {
+        background: #f3f4f6;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: #4b5563;
+        margin-top: 1rem;
+        text-align: center;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .profile-badge strong {
+        color: #1f2937;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Images */
+    .image-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .image-item {
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e0e0e0;
+        background: white;
+    }
+    
+    /* Setup form styling */
+    .setup-form {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        max-width: 600px;
+        margin: 2rem auto;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    
+    .setup-form h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: #1f2937;
+    }
+    
+    .setup-form label {
+        color: #374151;
+        font-weight: 500;
+        margin-top: 1rem;
+        display: block;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# SESSION STATE INITIALIZATION
+# ---------------------------------------------------------
+if "step" not in st.session_state:
+    st.session_state.step = 'setup'
+
+if "user_profile" not in st.session_state:
+    st.session_state.user_profile = None
+
+if "diet_plan" not in st.session_state:
+    st.session_state.diet_plan = None
+
+if "body_images" not in st.session_state:
+    st.session_state.body_images = []
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+if "profile_complete" not in st.session_state:
+    st.session_state.profile_complete = False
+
+# ---------------------------------------------------------
+# HELPER FUNCTIONS
+# ---------------------------------------------------------
+def format_diet_plan(plan_text):
+    """Format diet plan for better readability."""
+    formatted = plan_text.replace('*', '**')
+    
+    for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
+        formatted = formatted.replace(f'**{day}**', f'\n### {day}')
+    
+    formatted = formatted.replace('**Breakfast:**', '\n**Breakfast:**')
+    formatted = formatted.replace('**Lunch:**', '\n**Lunch:**')
+    formatted = formatted.replace('**Dinner:**', '\n**Dinner:**')
+    formatted = formatted.replace('**Snacks:**', '\n**Snacks:**')
+    
+    formatted = formatted.replace('**Expected Results in 8 Weeks:**', '\n\n## Expected Results')
+    formatted = formatted.replace('**Body Parts Most Affected by This Diet:**', '\n\n## Targeted Areas')
+    formatted = formatted.replace('**5 Key Success Tips Based on Nutrition Science:**', '\n\n## Success Tips')
+    formatted = formatted.replace('**Important Warnings:**', '\n\n## Important Notes')
+    formatted = formatted.replace('**Next Steps:**', '\n\n## Next Steps')
+    
+    formatted = formatted.replace('•', '\n-')
+    formatted = '\n'.join(line.strip() for line in formatted.split('\n') if line.strip())
+    
+    return formatted
+
+def map_body_part_to_exercise(body_part):
+    """Map body part keywords to exercises from the LoRA training dataset."""
+    # This mapping uses actual exercise names from data/Body_Exercise/
+    exercise_map = {
+        "belly": ["plank", "russian twist"],
+        "abdomen": ["plank", "leg raises"],
+        "core": ["plank", "russian twist"],
+        "chest": ["bench press", "push up"],
+        "pectorals": ["bench press", "incline bench press"],
+        "back": ["deadlift", "pull up", "lat pulldown"],
+        "lats": ["pull up", "lat pulldown"],
+        "shoulders": ["shoulder press", "lateral raises"],
+        "legs": ["squat", "leg extension"],
+        "quadriceps": ["squat", "leg extension"],
+        "calves": ["squat"],
+        "thighs": ["squat", "leg extension"],
+        "arms": ["barbell biceps curl", "tricep pushdown"],
+        "biceps": ["barbell biceps curl", "hammer curl"],
+        "triceps": ["tricep pushdown", "tricep dips"],
+        "hips": ["hip thrust", "squat"],
+        "glutes": ["hip thrust", "squat"],
+    }
+    
+    # Find matching exercises
+    for keyword, exercises in exercise_map.items():
+        if keyword in body_part:
+            return exercises[0]  # Return first exercise for that body part
+    
+    return "plank"  # Default exercise
+
+def extract_body_parts(diet_plan):
+    """Extract affected body parts from diet plan by parsing various possible formats."""
+    import re
+    
+    # Try multiple patterns to find body parts section
+    patterns = [
+        r"## Body Parts Most Affected by This Diet:\s*\n(.*?)(?=\n##|\n\n##|\Z)",
+        r"Body parts most affected by this diet[:\-]?\s*\n?(.*?)(?=\n\n|\n[A-Z]|\Z)",
+        r"Body parts affected[:\-]?\s*\n?(.*?)(?=\n\n|\n[A-Z]|\Z)",
+        r"Affected body parts[:\-]?\s*\n?(.*?)(?=\n\n|\n[A-Z]|\Z)"
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, diet_plan, re.DOTALL | re.IGNORECASE)
+        if match:
+            section = match.group(1)
+            # Extract items after - or • or numbers
+            parts = re.findall(r"[-•]\s*([^-\n•]+)", section)
+            if not parts:
+                # Try to split by commas or newlines
+                parts = [part.strip() for part in re.split(r'[,\n]', section) if part.strip()]
+            
+            parts = [part.strip().lower() for part in parts if part.strip()]
+            
+            # Filter to only allowed body parts
+            allowed_parts = ['biceps', 'triceps', 'back', 'legs', 'shoulders', 'chest', 'belly']
+            filtered_parts = [part for part in parts if any(allowed in part for allowed in allowed_parts)]
+            
+            if filtered_parts:
+                return filtered_parts
+    
+    # If no section found, try to find any mention of body parts in the plan
+    all_parts = re.findall(r'\b(biceps|triceps|back|legs|shoulders|chest|belly)\b', diet_plan, re.IGNORECASE)
+    if all_parts:
+        return list(set(part.lower() for part in all_parts))
+    
+    # Default fallback
+    return ['chest', 'back', 'legs']  # Common body parts for general fitness
+
+def generate_ai_image(prompt, output_dir="generated_streamlit"):
+    """Generate image using LoRA."""
+    args = argparse.Namespace(
+        base_model="SG161222/Realistic_Vision_V5.1_noVAE",
+        lora_path="model/full_lora_finetune",
+        prompt=prompt,
+        negative_prompt="low quality, deformed, bad anatomy",
+        output_dir=output_dir,
+        num_images=1,
+        steps=30,
+        guidance=7.5,
+        seed=None
+    )
+    
+    generate_images(args)
+    
+    original_path = Path(output_dir) / "generated_0000.png"
+    if original_path.exists():
+        unique_filename = f"generated_{uuid.uuid4().hex[:8]}.png"
+        unique_path = Path(output_dir) / unique_filename
+        original_path.rename(unique_path)
+        return str(unique_path)
+    return None
+
+def stream_response(text):
+    """Stream text word by word."""
+    words = text.split()
+    output = ""
+    for w in words:
+        output += w + " "
+        yield output
+        time.sleep(0.02)
+
+# ---------------------------------------------------------
+# UI COMPONENTS
+# ---------------------------------------------------------
+def render_header():
+    """Render minimalist header."""
+    st.markdown("""
+    <div class="header">
+        <h1>✨ WellGen AI</h1>
+        <p>Your AI Wellness Coach</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_profile_badge(profile):
+    """Render user profile badge."""
+    if profile:
+        st.markdown(f"""
+        <div class="profile-badge">
+            <strong>{profile['age']}y</strong> • <strong>{profile['weight']}kg</strong> • 
+            <strong>{profile['goal'].replace('_', ' ').title()}</strong> • 
+            <strong>{profile['cuisine'].title()}</strong> cuisine
+        </div>
+        """, unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# SETUP FLOW (INTEGRATED INTO CHAT)
+# ---------------------------------------------------------
+def show_initial_setup():
+    """Show profile setup integrated into chat."""
+    render_header()
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("### 👋 Let's Get Started")
+        st.markdown("Tell me about yourself and I'll create a personalized wellness plan.")
+        
+        st.divider()
+        
+        col_left, col_right = st.columns(2)
+        with col_left:
+            height = st.number_input("Height (cm)", 120, 220, 175, label_visibility="visible")
+            age = st.number_input("Age", 18, 100, 25, label_visibility="visible")
+            allergies = st.text_input("Allergies", "none", label_visibility="visible")
+        
+        with col_right:
+            weight = st.number_input("Weight (kg)", 40, 200, 70, label_visibility="visible")
+            gender = st.selectbox("Gender", ["Male", "Female"], label_visibility="visible")
+            cuisine = st.selectbox("Cuisine", ["Any", "Asian", "Mediterranean", "Indian", "Pakistani", "Italian"], label_visibility="visible")
+        
+        goal = st.selectbox("Your Goal", ["Weight Loss", "Muscle Gain", "Maintenance"], label_visibility="visible")
+        
+        st.divider()
+        
+        if st.button("🚀 Create My Plan", use_container_width=True, type="primary"):
+            st.session_state.user_profile = {
+                "height": height,
+                "age": age,
+                "weight": weight,
+                "gender": gender.lower(),
+                "goal": goal.lower().replace(" ", "_"),
+                "allergies": allergies,
+                "cuisine": cuisine.lower()
+            }
+            st.session_state.step = 'generating'
+            st.session_state.profile_complete = True
+            st.rerun()
+
+def show_chat_interface():
+    """Show the main chat interface."""
+    render_header()
+    render_profile_badge(st.session_state.user_profile)
+    
+    # Main chat area
+    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+    
+    # Messages container
+    messages_container = st.container()
+    
+    with messages_container:
+        if not st.session_state.messages:
+            # Welcome message
+            st.markdown("""
+            <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                <h3 style="margin-top: 3rem; color: #1f2937;">👋 Welcome to WellGen AI</h3>
+                <p>I'm ready to help you with your wellness journey. Ask me anything about your diet, fitness goals, or health!</p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            # Display messages
+            for msg in st.session_state.messages:
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
+                    if 'images' in msg:
+                        for img_path in msg['images']:
+                            st.image(img_path, use_column_width=True)
+    
+    # Show diet plan
+    with st.expander("📋 View Your Diet Plan", expanded=False):
+        if st.session_state.diet_plan:
+            st.markdown(st.session_state.diet_plan)
+    
+    # Show body images
+    if st.session_state.body_images:
+        with st.expander("🎨 Body Visualizations", expanded=False):
+            cols = st.columns(min(len(st.session_state.body_images), 3))
+            for i, (part, img_path) in enumerate(st.session_state.body_images):
+                with cols[i % len(cols)]:
+                    st.image(img_path, caption=part, use_column_width=True)
+    
+    # Input area
+    st.markdown('<div class="input-container">', unsafe_allow_html=True)
+    user_input = st.chat_input("Ask about your wellness plan, diet, or type /visualhelp for images...", key="chat_input")
+    
+    if user_input:
+        # Add user message
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        
+        with st.chat_message("user"):
+            st.markdown(user_input)
+        
+        # Generate response
+        if user_input.strip() == "/visualhelp":
+            with st.chat_message("assistant"):
+                with st.spinner("🎨 Generating visual assistance..."):
+                    last_user_msg = ""
+                    for msg in reversed(st.session_state.messages):
+                        if msg["role"] == "user" and msg["content"] != "/visualhelp":
+                            last_user_msg = msg["content"]
+                            break
+                    
+                    prompt = f"Provide visual help for this question: '{last_user_msg}'. Include image prompts in square brackets like [anatomical illustration of biceps]."
+                    response = text_ai.chat(prompt)
+                    
+                    image_prompts = re.findall(r'\[([^\]]+)\]', response)
+                    if not image_prompts:
+                        image_prompts = [response[:100] + " anatomical illustration"]
+                    
+                    generated_images = []
+                    for img_prompt in image_prompts[:2]:
+                        img_path = generate_ai_image(img_prompt, "generated_help")
+                        if img_path:
+                            generated_images.append(img_path)
+                    
+                    st.markdown(response)
+                    for img_path in generated_images:
+                        st.image(img_path, use_column_width=True)
+                    
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": response,
+                        "images": generated_images
+                    })
+        else:
+            with st.chat_message("assistant"):
+                placeholder = st.empty()
+                raw_response = text_ai.chat(user_input)
+                streamed = ""
+                for chunk in stream_response(raw_response):
+                    streamed = chunk
+                    placeholder.markdown(streamed)
+                
+                st.session_state.messages.append({"role": "assistant", "content": raw_response})
+        
+        st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+def show_generating():
+    """Show generation progress and perform the actual generation."""
+    render_header()
+    render_profile_badge(st.session_state.user_profile)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("### ⏳ Creating Your Wellness Plan")
+        
+        # Progress bar
+        progress = st.progress(0)
+        
+        # Step 1: Generate diet plan
+        progress.progress(25)
+        st.markdown("📋 Analyzing your profile...")
+        
+        if not st.session_state.diet_plan:
+            with st.spinner("🍽️ Generating diet plan..."):
+                plan = text_ai.generate_diet_plan(st.session_state.user_profile)
+                st.session_state.diet_plan = format_diet_plan(plan)
+        
+        progress.progress(50)
+        st.markdown("🍽️ Diet plan created!")
+        
+        # Step 2: Generate body images
+        if not st.session_state.body_images:
+            with st.spinner("🎨 Creating body visualizations..."):
+                affected_parts = extract_body_parts(st.session_state.diet_plan)
+                images = []
+                
+                # Generate body part visualizations for diet app
+                for part in affected_parts:
+                    gender = st.session_state.user_profile.get('gender', 'male')
+                    
+                    # Anatomical body part visualization for diet app
+                    prompt = f"anatomical illustration of {gender} {part}, fitness body diagram, clean medical style, highlighted muscle area"
+                    
+                    print(f"🖼️  Generating: {part}")
+                    
+                    image_path = generate_ai_image(prompt, "generated_body_parts")
+                    if image_path:
+                        images.append((part.title(), image_path))
+                
+                st.session_state.body_images = images
+        
+        progress.progress(100)
+        st.markdown("✅ All done!")
+        
+        # Transition to chat
+        if st.button("💬 Start Chatting", use_container_width=True, type="primary"):
+            st.session_state.step = 'chat'
+            st.rerun()
+
+def stream_response(text):
+    """Stream text word by word."""
+    words = text.split()
+    output = ""
+    for w in words:
+        output += w + " "
+        yield output
+        time.sleep(0.02)
+
+# ---------------------------------------------------------
+# UI COMPONENTS
+# ---------------------------------------------------------
+def render_header():
+    """Render minimalist header."""
+    st.markdown("""
+    <div class="header">
+        <h1>✨ WellGen AI</h1>
+        <p>Your AI Wellness Coach</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_profile_badge(profile):
+    """Render user profile badge."""
+    if profile:
+        st.markdown(f"""
+        <div class="profile-badge">
+            <strong>{profile['age']}y</strong> • <strong>{profile['weight']}kg</strong> • 
+            <strong>{profile['goal'].replace('_', ' ').title()}</strong> • 
+            <strong>{profile['cuisine'].title()}</strong> cuisine
+        </div>
+        """, unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# SETUP FLOW (INTEGRATED INTO CHAT)
+# ---------------------------------------------------------
+def show_initial_setup():
+    """Show profile setup integrated into chat."""
+    render_header()
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("### 👋 Let's Get Started")
+        st.markdown("Tell me about yourself and I'll create a personalized wellness plan.")
+        
+        st.divider()
+        
+        col_left, col_right = st.columns(2)
+        with col_left:
+            height = st.number_input("Height (cm)", 120, 220, 175, label_visibility="visible")
+            age = st.number_input("Age", 18, 100, 25, label_visibility="visible")
+            allergies = st.text_input("Allergies", "none", label_visibility="visible")
+        
+        with col_right:
+            weight = st.number_input("Weight (kg)", 40, 200, 70, label_visibility="visible")
+            gender = st.selectbox("Gender", ["Male", "Female"], label_visibility="visible")
+            cuisine = st.selectbox("Cuisine", ["Any", "Asian", "Mediterranean", "Indian", "Pakistani", "Italian"], label_visibility="visible")
+        
+        goal = st.selectbox("Your Goal", ["Weight Loss", "Muscle Gain", "Maintenance"], label_visibility="visible")
+        
+        st.divider()
+        
+        if st.button("🚀 Create My Plan", use_container_width=True, type="primary"):
+            st.session_state.user_profile = {
+                "height": height,
+                "age": age,
+                "weight": weight,
+                "gender": gender.lower(),
+                "goal": goal.lower().replace(" ", "_"),
+                "allergies": allergies,
+                "cuisine": cuisine.lower()
+            }
+            st.session_state.step = 'generating'
+            st.session_state.profile_complete = True
+            st.rerun()
+
+def show_chat_interface():
+    """Show the main chat interface."""
+    render_header()
+    render_profile_badge(st.session_state.user_profile)
+    
+    # Main chat area
+    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+    
+    # Messages container
+    messages_container = st.container()
+    
+    with messages_container:
+        if not st.session_state.messages:
+            # Welcome message
+            st.markdown("""
+            <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                <h3 style="margin-top: 3rem; color: #1f2937;">👋 Welcome to WellGen AI</h3>
+                <p>I'm ready to help you with your wellness journey. Ask me anything about your diet, fitness goals, or health!</p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            # Display messages
+            for msg in st.session_state.messages:
+                with st.chat_message(msg["role"]):
+                    st.markdown(msg["content"])
+                    if 'images' in msg:
+                        for img_path in msg['images']:
+                            st.image(img_path, use_column_width=True)
+    
+    # Show diet plan
+    with st.expander("📋 View Your Diet Plan", expanded=False):
+        if st.session_state.diet_plan:
+            st.markdown(st.session_state.diet_plan)
+    
+    # Show body images
+    if st.session_state.body_images:
+        with st.expander("🎨 Body Visualizations", expanded=False):
+            cols = st.columns(min(len(st.session_state.body_images), 3))
+            for i, (part, img_path) in enumerate(st.session_state.body_images):
+                with cols[i % len(cols)]:
+                    st.image(img_path, caption=part, use_column_width=True)
+    
+    # Input area
+    st.markdown('<div class="input-container">', unsafe_allow_html=True)
+    user_input = st.chat_input("Ask about your wellness plan, diet, or type /visualhelp for images...", key="chat_input")
+    
+    if user_input:
+        # Add user message
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        
+        with st.chat_message("user"):
+            st.markdown(user_input)
+        
+        # Generate response
+        if user_input.strip() == "/visualhelp":
+            with st.chat_message("assistant"):
+                with st.spinner("🎨 Generating visual assistance..."):
+                    last_user_msg = ""
+                    for msg in reversed(st.session_state.messages):
+                        if msg["role"] == "user" and msg["content"] != "/visualhelp":
+                            last_user_msg = msg["content"]
+                            break
+                    
+                    prompt = f"Provide visual help for this question: '{last_user_msg}'. Include image prompts in square brackets like [anatomical illustration of biceps]."
+                    response = text_ai.chat(prompt)
+                    
+                    image_prompts = re.findall(r'\[([^\]]+)\]', response)
+                    if not image_prompts:
+                        image_prompts = [response[:100] + " anatomical illustration"]
+                    
+                    generated_images = []
+                    for img_prompt in image_prompts[:2]:
+                        img_path = generate_ai_image(img_prompt, "generated_help")
+                        if img_path:
+                            generated_images.append(img_path)
+                    
+                    st.markdown(response)
+                    for img_path in generated_images:
+                        st.image(img_path, use_column_width=True)
+                    
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": response,
+                        "images": generated_images
+                    })
+        else:
+            with st.chat_message("assistant"):
+                placeholder = st.empty()
+                raw_response = text_ai.chat(user_input)
+                streamed = ""
+                for chunk in stream_response(raw_response):
+                    streamed = chunk
+                    placeholder.markdown(streamed)
+                
+                st.session_state.messages.append({"role": "assistant", "content": raw_response})
+        
+        st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+def show_generating():
+    """Show generation progress and perform the actual generation."""
+    render_header()
+    render_profile_badge(st.session_state.user_profile)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("### ⏳ Creating Your Wellness Plan")
+        
+        # Progress bar
+        progress = st.progress(0)
+        
+        # Step 1: Generate diet plan
+        progress.progress(25)
+        st.markdown("📋 Analyzing your profile...")
+        
+        if not st.session_state.diet_plan:
+            with st.spinner("🍽️ Generating diet plan..."):
+                plan = text_ai.generate_diet_plan(st.session_state.user_profile)
+                st.session_state.diet_plan = format_diet_plan(plan)
+        
+        progress.progress(50)
+        st.markdown("🍽️ Diet plan created!")
+        
+        # Step 2: Generate body images
+        if not st.session_state.body_images:
+            with st.spinner("🎨 Creating body visualizations..."):
+                affected_parts = extract_body_parts(st.session_state.diet_plan)
+                images = []
+                
+                # Generate body part visualizations for diet app
+                for part in affected_parts:
+                    gender = st.session_state.user_profile.get('gender', 'male')
+                    
+                    # Anatomical body part visualization for diet app
+                    prompt = f"anatomical illustration of {gender} {part}, fitness body diagram, clean medical style, highlighted muscle area"
+                    
+                    print(f"🖼️  Generating: {part}")
+                    
+                    image_path = generate_ai_image(prompt, "generated_body_parts")
+                    if image_path:
+                        images.append((part.title(), image_path))
+                
+                st.session_state.body_images = images
+        
+        progress.progress(100)
+        st.markdown("✅ All done!")
+        
+        # Transition to chat
+        if st.button("💬 Start Chatting", use_container_width=True, type="primary"):
+            st.session_state.step = 'chat'
+            st.rerun()
+
+if st.session_state.step == 'setup':
+    show_initial_setup()
+elif st.session_state.step == 'generating':
+    show_generating()
+elif st.session_state.step == 'chat':
+    show_chat_interface()

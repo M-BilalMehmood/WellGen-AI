@@ -242,6 +242,7 @@ REQUIREMENTS:
 6. Include specific portion sizes
 7. Total daily calories should match target: {calories} cal
 8. Use the nutrition knowledge provided above to ensure scientifically sound recommendations
+9. Specify body parts affected by this diet plan, limited to: biceps, triceps, back, legs, shoulders, chest, belly
 
 FORMAT:
 Day: [Day Name]
@@ -282,6 +283,9 @@ Be specific, professional, and evidence-based."""
                 # Validate the diet plan (and potentially update it with minor improvements)
                 is_valid, validation_feedback, updated_plan = self.validate_diet_plan(generated_plan, user_data)
                 
+                # Clean the final plan
+                updated_plan = self._clean_response(updated_plan)
+                
                 if is_valid:
                     self.current_plan = updated_plan  # Use the potentially improved plan
                     return updated_plan
@@ -296,12 +300,65 @@ Be specific, professional, and evidence-based."""
                         return updated_plan
                         
             except Exception as e:
-                print(f"⚠️  Groq API error: {e}")
-                if attempt < max_retries - 1:
-                    print(f"Retrying... (attempt {attempt + 2}/{max_retries})")
+                error_msg = str(e)
+                if 'rate limit' in error_msg.lower() or '429' in error_msg:
+                    print(f"⚠️  Rate limit exceeded: {e}")
+                    return "Rate limit exceeded. Please wait a few minutes before trying again. You can continue chatting once the limit resets."
                 else:
-                    return "Error generating diet plan. Please try again."
-    
+                    print(f"⚠️  Groq API error: {e}")
+                    if attempt < max_retries - 1:
+                        print(f"Retrying... (attempt {attempt + 2}/{max_retries})")
+                    else:
+                        return "Error generating diet plan. Please try again."
+
+    def _clean_response(self, response):
+        """Clean and format the AI response for better readability."""
+        import re
+        try:
+            # Remove common AI artifacts
+            response = response.strip()
+            
+            # Remove redundant introductions
+            response = response.replace("As a wellness coach,", "").replace("As WellGen AI,", "").strip()
+            response = response.replace("Based on your profile,", "").replace("According to your information,", "").strip()
+            
+            # Format numbered lists properly
+            lines = response.split('\n')
+            cleaned_lines = []
+            
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                    
+                # Clean up list items
+                if line.startswith(('•', '-', '*')):
+                    line = line[1:].strip()
+                    if not line.startswith(('•', '-', '*')):
+                        line = f"• {line}"
+                
+                # Clean up numbered items
+                if re.match(r'^\d+\.', line):
+                    # Ensure proper formatting
+                    pass
+                
+                cleaned_lines.append(line)
+            
+            response = '\n'.join(cleaned_lines)
+            
+            # Remove excessive whitespace
+            response = re.sub(r'\n{3,}', '\n\n', response)
+            
+            # Capitalize first letter if it's a sentence
+            if response and not response[0].isupper():
+                response = response[0].upper() + response[1:]
+            
+            return response
+        except Exception as e:
+            # If cleaning fails for any reason, log a warning and return the trimmed original response
+            print(f"⚠️  Response cleaning error: {e}")
+            return (response or "").strip()
+
     def chat(self, question):
         """Chat using RAG + Groq with conversation history and context awareness."""
         # Build context about the user's profile and current plan
@@ -365,6 +422,9 @@ IMPORTANT INSTRUCTIONS:
             
             assistant_response = response.choices[0].message.content
             
+            # Clean and format the response
+            assistant_response = self._clean_response(assistant_response)
+            
             # Store in conversation history
             self.conversation_history.append({"role": "user", "content": question})
             self.conversation_history.append({"role": "assistant", "content": assistant_response})
@@ -374,8 +434,13 @@ IMPORTANT INSTRUCTIONS:
             
             return assistant_response
         except Exception as e:
-            print(f"⚠️  Groq API error: {e}")
-            return "Sorry, I encountered an error. Please try again."
+            error_msg = str(e)
+            if 'rate limit' in error_msg.lower() or '429' in error_msg:
+                print(f"⚠️  Rate limit exceeded: {e}")
+                return "Rate limit exceeded. Please wait a few minutes before trying again. You can continue chatting once the limit resets."
+            else:
+                print(f"⚠️  Groq API error: {e}")
+                return "Sorry, I encountered an error. Please try again."
 
 def main():
     wellgen = WellGenRAG(use_rag=True)

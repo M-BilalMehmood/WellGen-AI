@@ -4,9 +4,11 @@ Generate images using fine-tuned Stable Diffusion LoRA.
 """
 
 import argparse
+from pathlib import Path
 import torch
 from diffusers import StableDiffusionPipeline
-from pathlib import Path
+from transformers import AutoFeatureExtractor
+# from safety_checker import StableDiffusionSafetyChecker
 
 def generate_images(args):
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -16,10 +18,16 @@ def generate_images(args):
         print("WARNING: Generating on CPU will be slow.")
 
     print(f"Loading base model: {args.base_model}")
+    # load safety checker and feature extractor
+    # feature_extractor = AutoFeatureExtractor.from_pretrained("openai/clip-vit-large-patch14")
+    # safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
+    
     pipe = StableDiffusionPipeline.from_pretrained(
         args.base_model,
         torch_dtype=torch.float16 if device == "cuda" else torch.float32,
         safety_checker=None
+        # safety_checker=safety_checker,
+        # feature_extractor=feature_extractor
     )
     pipe = pipe.to(device)
 
@@ -55,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument("--base_model", type=str, default="SG161222/Realistic_Vision_V5.1_noVAE", help="Base model path or ID")
     parser.add_argument("--lora_path", type=str, default=None, help="Path to trained LoRA weights folder")
     parser.add_argument("--prompt", type=str, required=True, help="Prompt for generation")
-    parser.add_argument("--negative_prompt", type=str, default="low quality, bad anatomy, worst quality, deformed, disfigured", help="Negative prompt")
+    parser.add_argument("--negative_prompt", type=str, default="low quality, bad anatomy, worst quality, deformed, disfigured, naked, private parts, undergarments", help="Negative prompt")
     parser.add_argument("--output_dir", type=str, default="generated_images", help="Output directory")
     parser.add_argument("--num_images", type=int, default=1, help="Number of images to generate")
     parser.add_argument("--steps", type=int, default=30, help="Inference steps")

@@ -357,7 +357,7 @@ def generate_ai_image(prompt, output_dir="generated_streamlit"):
         base_model="SG161222/Realistic_Vision_V5.1_noVAE",
         lora_path="model/full_lora_finetune",
         prompt=prompt,
-        negative_prompt="low quality, deformed, bad anatomy",
+        negative_prompt="low quality, deformed, bad anatomy, naked, private parts, undergarments, worst quality, disfigured, lower body in underwear",
         output_dir=output_dir,
         num_images=1,
         steps=30,
@@ -663,7 +663,7 @@ def show_generating():
                     gender = st.session_state.user_profile.get('gender', 'male')
                     
                     # Anatomical body part visualization for diet app
-                    prompt = f"anatomical illustration of {gender} {part}, fitness body diagram, clean medical style, highlighted muscle area"
+                    prompt = f"anatomical illustration of {gender} {part}, fitness body diagram, full body appropriate clothing, clean medical style, highlighted muscle area"
                     
                     print(f"🖼️  Generating: {part}")
                     

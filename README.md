@@ -43,7 +43,7 @@ graph TD
     Validator -->|Pass| Response[Final Response]
     Validator -->|Fail| LLM[Regenerate]
     Response --> UI[Streamlit UI]
-    UI --> ImageGen[Image Generation (LoRA)]
+    UI --> ImageGen["Image Generation (LoRA)"]
 ```
 
 ## 🚀 Quick Start
